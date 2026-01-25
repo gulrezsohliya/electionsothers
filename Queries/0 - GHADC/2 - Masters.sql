@@ -1,0 +1,19 @@
+﻿UPDATE MASTERS.ELECTORALROLLREVISIONS
+SET 
+REVISIONDESCRIPTION  ='Basic Roll of Revision, 2026, prepared in accordance with the extent of the newly delimited Areas and Constituency',
+REVISIONYEAR = 2026,
+QUALIFYINGDATE= '2026-01-01',
+REVISIONTYPE = 'Draft Rolls 2026',
+PUBLICATIONDATE = '2026-02-04',
+ROLLTYPE = 'Mother Roll',
+ENABLED = 'Y'
+WHERE REVISIONNO = 0;
+
+
+UPDATE MASTERS.IDENTITYCARDSMASTERS SET VALIDFROM = '2026-02-01', VALIDTO = '2026-04-30';
+
+UPDATE MASTERS.MASTERTABLE SET ELECTIONDESCRIPTION =  'Elections to the Autonomous District Council - 2026' ,
+HEADER3 = 'Elections to the Autonomous District Council - 2026' , 
+POLLDATE = '2026-03-01';
+
+

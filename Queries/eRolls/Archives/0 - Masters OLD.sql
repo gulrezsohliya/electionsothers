@@ -1,0 +1,249 @@
+﻿INSERT INTO MASTERS.DISTRICTS VALUES (13,'AMLAREM','AMLAREM','S', 17, 275,'AML','1 - Shillong (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (14,'PYNURSLA','PYNURSLA','S', 17, 275,'PYN','1 - Shillong (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (15,'SOHRA','SOHRA','S', 17, 275,'SOH','1 - Shillong (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (16,'CHOKPOT','CHOKPOT','S', 17, 275,'CKT','2 - Tura (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (17,'RAKSAMGRE','RAKSAMGRE','S', 17, 275,'RAK','2 - Tura (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (18,'DADENGGRE','DADENGGRE','S', 17, 275,'DAD','2 - Tura (ST) Parliamentary Constituency');
+INSERT INTO MASTERS.DISTRICTS VALUES (19,'MAWSHYNRUT','MAWSHYNRUT','S', 17, 275,'MRT','2 - Tura (ST) Parliamentary Constituency');
+
+ALTER TABLE MASTERS.DISTRICTS ADD COLUMN REFERENCEDISTRICTCODE SMALLINT DEFAULT 1;
+
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = DISTRICTCODE WHERE DISTRICTSDO = 'D';
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 1 WHERE DISTRICTCODE = 13;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 3 WHERE DISTRICTCODE = 14;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 3 WHERE DISTRICTCODE = 15;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 7 WHERE DISTRICTCODE = 16;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 6 WHERE DISTRICTCODE = 17;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 6 WHERE DISTRICTCODE = 18;
+UPDATE MASTERS.DISTRICTS SET REFERENCEDISTRICTCODE = 4 WHERE DISTRICTCODE = 19;
+
+
+CREATE TABLE masters.blocks
+(
+  districtcode smallint NOT NULL,
+  sdocode smallint ,
+  blockcode smallint NOT NULL,
+  blockname character varying(255) NOT NULL,
+  userid smallint NOT NULL,
+  entrydate timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT blockspkey PRIMARY KEY (districtcode, blockcode),
+  --CONSTRAINT blocksukey UNIQUE (blockname),  
+  CONSTRAINT blocksfk1 FOREIGN KEY (districtcode)
+        REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT blocksfk2 FOREIGN KEY (sdocode)
+      REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+  
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE masters.blocks   OWNER TO elections;
+
+
+INSERT INTO MASTERS.BLOCKS SELECT "DIST_NO", CASE WHEN "SUB_DIV_NO" = 0 THEN NULL ELSE "SUB_DIV_NO" END,  "BLOCK_NO", "BLOCK_NAME_EN", 1, CURRENT_DATE FROM  SOURCES.BLOCKS ;
+
+
+
+
+
+INSERT INTO MASTERS.ASSEMBLYCONSTITUENCIES SELECT DIST_NO, AC_NO, AC_NAME_EN, AC_TYPE, PC_NO FROM SOURCES.AC_LIST
+
+
+
+ALTER TABLE MASTERS.ACPARTS ALTER COLUMN psbuildingsid TYPE CHARACTER VARYING(255) ;
+ALTER TABLE MASTERS.ACPARTS RENAME COLUMN psbuildingsid TO psbuildingid  ;
+ALTER TABLE MASTERS.ACPARTS RENAME COLUMN mainvillage TO mainvillagecode  ;
+ALTER TABLE MASTERS.ACPARTS DROP COLUMN sensitivitycode ;
+ALTER TABLE MASTERS.ACPARTS DROP COLUMN motorabledistance ;
+ALTER TABLE MASTERS.ACPARTS DROP COLUMN nonmotorabledistance ;
+ALTER TABLE MASTERS.ACPARTS ADD COLUMN  userid smallint NOT NULL;
+ALTER TABLE MASTERS.ACPARTS ADD COLUMN  entrydate timestamp without time zone NOT NULL DEFAULT now();
+
+SELECT * FROM MASTERS.ACPARTS 
+
+INSERT INTO MASTERS.ACPARTS SELECT AC_NO, PART_NO, PART_NAME_EN, FVT_TYPE , PS_BUILDINGS_ID , PART_VOTER_CAPACITY, VILLAGES_IN_PART, MAIN_VILLAGE, PATWARI_NO, TAHSIL_NO, RI_NO, 1, CURRENT_TIMESTAMP FROM SOURCES.PART_LIST ;
+
+
+
+ALTER TABLE MASTERS.POLLINGSTATIONS DROP COLUMN psslno;
+ALTER TABLE MASTERS.POLLINGSTATIONS DROP COLUMN psloctype;
+
+
+ALTER TABLE MASTERS.POLLINGSTATIONS ALTER COLUMN psbuildingid TYPE CHARACTER VARYING(255) ;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN auxypscount smallint NOT NULL DEFAULT 0;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN isauxyps character varying(1) NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN pslocationtype character varying(1) NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN pslocationno integer NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN pslocationid integer NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS  ADD COLUMN pslocationcategory character varying(1) NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS DROP COLUMN sensitivitycode ;
+  
+ALTER TABLE MASTERS.POLLINGSTATIONS ADD COLUMN  userid smallint NOT NULL;
+ALTER TABLE MASTERS.POLLINGSTATIONS ADD COLUMN  entrydate timestamp without time zone NOT NULL DEFAULT now();
+
+
+
+SELECT * FROM MASTERS.POLLINGSTATIONS
+
+INSERT INTO MASTERS.POLLINGSTATIONS
+SELECT AC.AC_NO, AP.PART_NO,PS.PS_SR_NO,  PS.PS_TYPE_ENG, PS.NAME, PS.ADDRESS, PS_BUILDINGS_ID , PSB.PSBUILDING_NAME_EN, PSLOCN_NO_SECTION_ID, 0, PS_TYPE, PS_CATEGORY, 1, CURRENT_TIMESTAMP
+FROM SOURCES.AC_LIST  AC INNER JOIN SOURCES.PART_LIST AP ON AC.AC_NO = AP.AC_NO
+INNER JOIN SOURCES.PS_DETAILS PS ON (AP.AC_NO = PS.AC_NO AND AP.PART_NO = PS.PART_NO)
+INNER JOIN SOURCES.PS_BUILDINGS PSB ON (AP.AC_NO = PSB.AC_NO AND AP.PS_BUILDINGS_ID = PSB.PSBUILDING_ID)
+WHERE AC.AC_NO = 17 ORDER BY AC.AC_NO, AP.PART_NO;
+
+
+
+CREATE TABLE masters.policestations
+(
+  districtcode smallint NOT NULL,
+  policestationno smallint NOT NULL,
+  policestationcode character varying(5) NOT NULL,
+  policestationname character varying(255) NOT NULL,
+  userid smallint NOT NULL,
+  entrydate timestamp without time zone NOT NULL DEFAULT now(),
+
+  CONSTRAINT policestationspkey PRIMARY KEY (policestationcode),
+  CONSTRAINT policestationupkey UNIQUE (districtcode, policestationno),
+  CONSTRAINT policestationsfk1 FOREIGN KEY (districtcode)
+      REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE MASTERS.policestations   OWNER TO elections;
+
+INSERT INTO MASTERS.POLICESTATIONS SELECT DIST_NO, POLICEST_NO, POLICEST_ID, POLICEST_NAME_EN, 1, CURRENT_TIMESTAMP  FROM SOURCES.POLICE_STATION ;
+
+SELECT * FROM SOURCES.POST_OFFICES;
+
+CREATE TABLE masters.postoffices
+(
+  districtcode smallint NOT NULL,
+  postofficeno smallint NOT NULL,
+  postofficecode character varying(5) NOT NULL,
+  postofficename character varying(255) NOT NULL,
+  pincode integer NOT NULL,
+  userid smallint NOT NULL,
+  entrydate timestamp without time zone NOT NULL DEFAULT now(),
+
+  CONSTRAINT postofficepkey PRIMARY KEY (postofficecode),
+  CONSTRAINT postofficeupkey UNIQUE (districtcode, postofficeno),
+  CONSTRAINT postofficefk1 FOREIGN KEY (districtcode)
+      REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+)
+WITH (  OIDS=FALSE
+);
+ALTER TABLE MASTERS.postoffices OWNER TO elections;
+
+INSERT INTO MASTERS.POSTOFFICES SELECT DIST_NO, POSTOFF_NO, POSTOFF_ID, POSTOFF_NAME_EN, POSTOFF_PIN, 1, CURRENT_TIMESTAMP FROM SOURCES.POST_OFFICES;
+
+SELECT * FROM SOURCES.VILLAGES LIMIT 5 ;
+
+
+DROP TABLE masters.villages;
+CREATE TABLE masters.villages(
+  vlocationcode character varying(255) NOT NULL,
+  districtcode smallint NOT NULL,
+  blockcodex smallint ,
+  urbanrural character varying(1) NOT NULL,
+  villageid integer NOT NULL,
+  villagename character varying(255) NOT NULL,
+  panchayatid character varying(255) ,
+  tehsilnoX smallint NOT NULL,
+  patwarino smallint NOT NULL,
+  policestationcodex character varying(20) ,
+  postofficecodex character varying(20) ,
+  userid smallint NOT NULL,
+  entrydate timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT villagespkey PRIMARY KEY (vlocationcode),
+  CONSTRAINT villagesfk1 FOREIGN KEY (districtcode)
+      REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+ --CONSTRAINT villagesfk2 FOREIGN KEY (districtcode, blockcodex)
+  --    REFERENCES masters.blocks (districtcode, blockcode) MATCH SIMPLE
+   --   ON UPDATE CASCADE ON DELETE RESTRICT, 
+-- CONSTRAINT villagesfk3 FOREIGN KEY (policestationcodex)
+--       REFERENCES masters.policestations (policestationcode) MATCH SIMPLE
+--      ON UPDATE CASCADE ON DELETE RESTRICT
+-- ,CONSTRAINT villagesfk4 FOREIGN KEY (postofficecodex)
+--      REFERENCES masters.postoffices (postofficecode) MATCH SIMPLE
+--      ON UPDATE CASCADE ON DELETE RESTRICT
+      
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE villages   OWNER TO elections;
+
+
+
+INSERT INTO MASTERS.VILLAGES SELECT VLOCATION, DIST_NO, BLOCK_NO, URBAN_RURAL,  VILLAGE_ID, VILLAGE_NAME_EN, PANCHAYAT_ID, TAHSIL_NO, PATWARI_NO, POLICEST_ID, POSTOFF_ID, 1, CURRENT_TIMESTAMP FROM 
+SOURCES.VILLAGES ;
+
+
+
+
+SELECT * FROM SOURCES.VILLAGES WHERE BLOCK_NO IS NULL
+
+
+
+SELECT * FROM SOURCES.SECTION_LIST;
+
+DROP TABLE masters.sections;
+CREATE TABLE masters.sections
+(
+  acno smallint NOT NULL,
+  partno smallint NOT NULL,
+  sectionno smallint NOT NULL,
+  sectionid character varying(255) NOT NULL,
+  sectionname character varying(255) NOT NULL,
+  vlocationcode character varying(255) NOT NULL,
+  districtcode smallint NOT NULL,
+  blockcode smallint NOT NULL,
+  postofficecode character varying(20) NOT NULL,
+  policestationcode character varying(20) NOT NULL,
+  votercapacity smallint NOT NULL,
+  tehsilno smallint ,
+  pincodex integer NOT NULL ,
+  userid smallint NOT NULL,
+  entrydate timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT sectionspkey PRIMARY KEY (acno, partno, sectionno),
+  CONSTRAINT sectionsfk1 FOREIGN KEY (acno)
+      REFERENCES masters.assemblyconstituencies (acno) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT sectionsfk2 FOREIGN KEY (acno, partno)
+      REFERENCES masters.acparts (acno, partno) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+
+   CONSTRAINT sectionsfk3 FOREIGN KEY (districtcode)
+      REFERENCES masters.districts (districtcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+ CONSTRAINT vsectionsfk4 FOREIGN KEY (districtcode, blockcode)
+      REFERENCES masters.blocks (districtcode, blockcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT, 
+ CONSTRAINT sectionsfk4 FOREIGN KEY (policestationcode)
+       REFERENCES masters.policestations (policestationcode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+ CONSTRAINT sectionsfk5 FOREIGN KEY (postofficecode)
+      REFERENCES masters.postoffices (postofficecode) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE RESTRICT
+
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE masters.sections
+  OWNER TO elections;
+
+
+INSERT INTO MASTERS.SECTIONS
+SELECT AC_NO, PART_NO, SECTION_NO, SECTION_ID, SECTION_NAME_EN, VLOCATION, DIST_NO, BLOCK_NO, POSTOFF_ID, POLICEST_ID, SECTION_VOTER_CAPACITY, TAHSIL_NO, PIN_CODE, 1, CURRENT_TIMESTAMP FROM SOURCES.SECTION_LIST
+WHERE (BLOCK_NO <> 0 AND NOT (DIST_NO = 9 AND BLOCK_NO = 3) AND NOT (DIST_NO = 9 AND BLOCK_NO = 5) );
+
+

@@ -9,7 +9,8 @@ public class MigrateERollData {
 
     public static void main(String[] args) {
         // SQL Server connection parameters
-        String sqlServerUrl = "jdbc:sqlserver://localhost:1433;databaseName=S15_Reverse_Migration;encrypt=false";
+        //String sqlServerUrl = "jdbc:sqlserver://localhost:1433;databaseName=S15_Reverse_Migration;encrypt=false";
+        String sqlServerUrl = "jdbc:sqlserver://localhost:1433;databaseName=S15_2026;encrypt=false";
         String sqlServerUser = "sa";
         String sqlServerPassword = "Nicnet@10";
 
@@ -17,7 +18,9 @@ public class MigrateERollData {
 //        String postgresUrl = "jdbc:postgresql://10.179.0.75:5432/khadc";
 //        String postgresUser = "khadc";
 //        String postgresPassword = "khadc@@@75";
-        String postgresUrl = "jdbc:postgresql://localhost:5432/ghadc";
+
+       // String postgresUrl = "jdbc:postgresql://localhost:5432/ghadc";
+        String postgresUrl = "jdbc:postgresql://10.179.0.75:5432/ghadc";
         String postgresUser = "ghadc";
         String postgresPassword = "ghadc";
 
@@ -44,13 +47,13 @@ public class MigrateERollData {
             postgresConn.setAutoCommit(false);
 
             // Query to retrieve data from SQL Server
-            sourceacno = 17;
+            sourceacno = 39;
            // sourcepartno = 1;
 
             String selectQuery = " SELECT EPIC_ID, NULL AS PROCESS_TYPE, VOTER_EPIC EPIC_NUMBER, APPLICANT_FIRST_NAME_L1 APPLICANT_FIRST_NAME, NULL AS  APPLICANT_FIRST_NAME_L1, APPLICANT_LAST_NAME_L1 APPLICANT_LAST_NAME, NULL AS APPLICANT_LAST_NAME_L1, "
                     + " ASSEMBLY_CONSTITUENCY_NUMBER, PART_NUMBER, PART_SERIAL_NUMBER, SECTION_NO, [[VOTER_AGE]]] AGE, VOTER_GENDER GENDER, RELATION_TYPE, VOTER_RELATION_NAME RELATION_NAME, NULL AS RELATION_NAME_L1, HOUSE_NUMBER, "
                     + " DOB, NULL AS HOUSE_NO_OLD, 'N' AS STATUS_TYPE, VOTER_RELATION_LNAME RELATION_L_NAME, NULL AS RLN_L_NM_V1, IS_ACTIVE, 0 AS REVISION_NO, NULL AS NOTIONAL_HNO, HOUSE_NUMBER_L1, 'N' AS  MOVED, 'Y' AS ISADCVOTER, PHOTO "
-                    + " FROM EROLL_DATA WHERE 1= 1  AND TOBEMIGRATED ='Y' ";
+                    + " FROM EROLL_DATA WHERE 1= 1  ";
             if (sourceacno > 0) {
                 selectQuery += " AND ASSEMBLY_CONSTITUENCY_NUMBER = " + sourceacno;
             }
@@ -79,11 +82,12 @@ public class MigrateERollData {
             while (resultSet.next()) {
                 statementPG.setLong(1, resultSet.getLong("EPIC_ID"));
                 statementPG.setString(2, resultSet.getString("PROCESS_TYPE"));
+                
                 statementPG.setString(3, resultSet.getString("EPIC_NUMBER"));
-                statementPG.setString(4, resultSet.getString("APPLICANT_FIRST_NAME"));
-                statementPG.setString(5, resultSet.getString("APPLICANT_FIRST_NAME_L1"));
-                statementPG.setString(6, resultSet.getString("APPLICANT_LAST_NAME"));
-                statementPG.setString(7, resultSet.getString("APPLICANT_LAST_NAME_L1"));
+                statementPG.setString(4, clean(resultSet.getString("APPLICANT_FIRST_NAME")));
+                statementPG.setString(5, clean(resultSet.getString("APPLICANT_FIRST_NAME_L1")));
+                statementPG.setString(6, clean(resultSet.getString("APPLICANT_LAST_NAME")));
+                statementPG.setString(7, clean(resultSet.getString("APPLICANT_LAST_NAME_L1")));
                 statementPG.setInt(8, resultSet.getInt("ASSEMBLY_CONSTITUENCY_NUMBER"));
                 statementPG.setInt(9, resultSet.getInt("PART_NUMBER"));
                 statementPG.setInt(10, resultSet.getInt("PART_SERIAL_NUMBER"));
@@ -163,4 +167,9 @@ public class MigrateERollData {
             }
         }
     }
+    
+    private static String clean(String s) {
+    return s == null ? null : s.replace("\u0000", "");
+}
+
 }

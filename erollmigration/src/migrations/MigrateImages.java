@@ -67,10 +67,6 @@ public class MigrateImages {
                 byte[] photo = resultSet.getBytes("photo");
                 
                 acno = 1;
-
-                
-                
-                
                 updateStmt.setBytes(1, photo);
                 updateStmt.setInt(2, acno);
                 updateStmt.setInt(3, partno);

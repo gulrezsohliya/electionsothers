@@ -19,8 +19,8 @@ public class MigrateERollData {
 //        String postgresUser = "khadc";
 //        String postgresPassword = "khadc@@@75";
 
-       // String postgresUrl = "jdbc:postgresql://localhost:5432/ghadc";
-        String postgresUrl = "jdbc:postgresql://10.179.0.75:5432/ghadc";
+        //String postgresUrl = "jdbc:postgresql://localhost:5432/ghadc";
+        String postgresUrl = "jdbc:postgresql://10.179.0.75:5432/ghadc?reWriteBatchedInserts=true";
         String postgresUser = "ghadc";
         String postgresPassword = "ghadc";
 
@@ -36,6 +36,8 @@ public class MigrateERollData {
         int partno = -1;
         int slnoinpart = -1;
         long count = 0;
+        
+        
         try {
             // Establish connection to SQL Server
             sqlServerConn = DriverManager.getConnection(sqlServerUrl, sqlServerUser, sqlServerPassword);
@@ -47,10 +49,10 @@ public class MigrateERollData {
             postgresConn.setAutoCommit(false);
 
             // Query to retrieve data from SQL Server
-            sourceacno = 39;
-           // sourcepartno = 1;
+            sourceacno = 60;
+            //sourcepartno = 1;
 
-            String selectQuery = " SELECT EPIC_ID, NULL AS PROCESS_TYPE, VOTER_EPIC EPIC_NUMBER, APPLICANT_FIRST_NAME_L1 APPLICANT_FIRST_NAME, NULL AS  APPLICANT_FIRST_NAME_L1, APPLICANT_LAST_NAME_L1 APPLICANT_LAST_NAME, NULL AS APPLICANT_LAST_NAME_L1, "
+            String selectQuery = " SELECT EPIC_ID, NULL AS PROCESS_TYPE, VOTER_EPIC EPIC_NUMBER, VOTER_FNAME APPLICANT_FIRST_NAME, NULL AS  APPLICANT_FIRST_NAME_L1, VOTER_LNAME APPLICANT_LAST_NAME, NULL AS APPLICANT_LAST_NAME_L1, "
                     + " ASSEMBLY_CONSTITUENCY_NUMBER, PART_NUMBER, PART_SERIAL_NUMBER, SECTION_NO, [[VOTER_AGE]]] AGE, VOTER_GENDER GENDER, RELATION_TYPE, VOTER_RELATION_NAME RELATION_NAME, NULL AS RELATION_NAME_L1, HOUSE_NUMBER, "
                     + " DOB, NULL AS HOUSE_NO_OLD, 'N' AS STATUS_TYPE, VOTER_RELATION_LNAME RELATION_L_NAME, NULL AS RLN_L_NM_V1, IS_ACTIVE, 0 AS REVISION_NO, NULL AS NOTIONAL_HNO, HOUSE_NUMBER_L1, 'N' AS  MOVED, 'Y' AS ISADCVOTER, PHOTO "
                     + " FROM EROLL_DATA WHERE 1= 1  ";
@@ -58,7 +60,7 @@ public class MigrateERollData {
                 selectQuery += " AND ASSEMBLY_CONSTITUENCY_NUMBER = " + sourceacno;
             }
             if (sourcepartno > 0) {
-                selectQuery += " AND PART_NUMBER = " + sourcepartno;
+                selectQuery += " AND PART_NUMBER  IN  (" + sourcepartno + ")";
             }
 
 
@@ -111,7 +113,7 @@ public class MigrateERollData {
                 statementPG.setString(28, resultSet.getString("ISADCVOTER"));
                 statementPG.setBytes(29, resultSet.getBytes("PHOTO"));
                 statementPG.addBatch();
-
+                
                 System.out.println("Data Transfer in progress : " + ++count + "  AC : " + resultSet.getInt("ASSEMBLY_CONSTITUENCY_NUMBER") + " PART NO : " + resultSet.getInt("PART_NUMBER") + " SLNOINPART " + resultSet.getInt("PART_SERIAL_NUMBER"));
 
             }

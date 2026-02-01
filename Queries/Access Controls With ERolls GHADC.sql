@@ -14,6 +14,10 @@ WHERE EMAIL NOT IN
 
 */
 
+INSERT INTO USERS.USEROFFICES
+SELECT  (SELECT MAX(USEROFFICEID) FROM  USERS.USEROFFICES)+ ROW_NUMBER() OVER(), OFFICECODE, 22
+ FROM MASTERS.OFFICES WHERE ISELECTIONOFFICE='Y'
+ 
 
 /*
 
@@ -31,8 +35,8 @@ WHERE EMAIL IN
 /*
 
 DELETE FROM USERS.USEROFFICES WHERE USERID NOT IN (
-SELECT U.USERID FROM USERS.USERACCOUNTS U INNER JOIN USERS.USEROFFICES UO ON U.USERID =UO.USERID
-WHERE EMAIL IN 
+	SELECT U.USERID FROM USERS.USERACCOUNTS U INNER JOIN USERS.USEROFFICES UO ON U.USERID =UO.USERID
+	WHERE EMAIL IN 
 (
 'gulrez.sohliya@nic.in','lailarisa.singh@nic.in')
 );
@@ -62,7 +66,7 @@ INSERT INTO USERS.USERPAGES
 SELECT ROW_NUMBER() OVER() + (select max(userpageid) from USERS.USERPAGES), PAGEID, USERID
 FROM USERS.USERACCOUNTS U , MASTERS.PAGES P
 WHERE EMAIL IN (
-'jmarak188@gmail.com','swarup.banai@gmail.com', 'febianchmarak@gmail.com', 'tangmanelection@gmail.com', 'elim.marak@gmail.com', 'deramunmomin@gmail.com','isiahsunny@gmail.com'
+'jmarak188@gmail.com','swarup.banai@gmail.com', 'febianchmarak@gmail.com', 'tangmanelection@gmail.com', 'elim.marak@gmail.com', 'deramunmomin@gmail.com','isiahsunny@gmail.com','fenzcra@gmail.com'
 )
 AND PAGEID NOT IN (3, 4,6)
 AND PAGEID IN (55,56,57,58,29,59,60,61,62,63, 64,65,66,67)
@@ -73,7 +77,7 @@ AND (USERID, PAGEID) NOT IN (SELECT USERID, PAGEID FROM USERS.USERPAGES);
 -- ASSIGN RANDOMIZATION PAGES 
 INSERT INTO USERS.USERPAGES SELECT ROW_NUMBER() OVER() + (select max(userpageid) from USERS.USERPAGES), PAGEID, USERID
 FROM USERS.USERACCOUNTS U , MASTERS.PAGES P WHERE EMAIL IN (
-'jmarak188@gmail.com','swarup.banai@gmail.com', 'febianchmarak@gmail.com', 'tangmanelection@gmail.com', 'elim.marak@gmail.com', 'deramunmomin@gmail.com','isiahsunny@gmail.com'
+'jmarak188@gmail.com','swarup.banai@gmail.com', 'febianchmarak@gmail.com', 'tangmanelection@gmail.com', 'elim.marak@gmail.com', 'deramunmomin@gmail.com','isiahsunny@gmail.com','fenzcra@gmail.com'
 )
 AND PAGEID IN (1,2,5,7,8,9,10,11,12,13,14,15,16,17,21,24,26,28,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53)
 AND PAGEID NOT IN (3, 4,6)
